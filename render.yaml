@@ -10,4 +10,6 @@ services:
       - key: BOT_TOKEN
         sync: false
       - key: ADMIN_CHAT_ID
-        sync: false 
+        sync: false
+      - key: WEBAPP_URL
+        value: https://newshopbot.onrender.com 
