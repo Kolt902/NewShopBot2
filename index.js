@@ -7,8 +7,17 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Check for required environment variables
+if (!process.env.BOT_TOKEN) {
+  throw new Error('BOT_TOKEN environment variable is required');
+}
+
+if (!process.env.ADMIN_CHAT_ID) {
+  throw new Error('ADMIN_CHAT_ID environment variable is required');
+}
+
 const app = express();
-const bot = new Telegraf(process.env.BOT_TOKEN || '8167818831:AAEIS41PNZ7eE0y2X6mV68HT3UmQ4JTwB6k');
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -19,39 +28,40 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/order', (req, res) => {
+app.post('/order', async (req, res) => {
   const order = req.body;
-  console.log('Новый заказ:', order);
+  console.log('New order:', order);
   
   try {
-    // Сохраняем заказ в файл
-    const orders = fs.existsSync('orders.json') ? JSON.parse(fs.readFileSync('orders.json')) : [];
-    orders.push({
-      ...order,
-      timestamp: new Date().toISOString()
-    });
-    fs.writeFileSync('orders.json', JSON.stringify(orders, null, 2));
-
-    // Отправляем уведомление в Telegram
-    bot.telegram.sendMessage(process.env.ADMIN_CHAT_ID || 'Y@illia2323', 
-      `Новый заказ:\n${JSON.stringify(order, null, 2)}`
+    // Send notification to Telegram
+    await bot.telegram.sendMessage(
+      process.env.ADMIN_CHAT_ID,
+      `New Order:\n${JSON.stringify(order, null, 2)}`
     );
 
     res.json({ status: 'success' });
   } catch (error) {
-    console.error('Ошибка при обработке заказа:', error);
-    res.status(500).json({ status: 'error', message: error.message });
+    console.error('Error processing order:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to process order. Please try again later.' 
+    });
   }
 });
 
-// Запуск сервера
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
-// Запуск бота
-bot.launch();
+// Start bot
+bot.launch().then(() => {
+  console.log('Telegram bot started successfully');
+}).catch(error => {
+  console.error('Failed to start Telegram bot:', error);
+  process.exit(1);
+});
 
 // Graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
