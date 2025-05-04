@@ -1,4 +1,7 @@
-import express from 'express';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const express = require('express');
 import { Telegraf } from 'telegraf';
 import path from 'path';
 import { fileURLToPath } from 'url';
