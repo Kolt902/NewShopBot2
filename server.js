@@ -21,7 +21,7 @@ process.on('unhandledRejection', (err) => {
 });
 
 // Bot configuration
-const token = process.env.BOT_TOKEN || '6187617831:AAEI54IPnZ7e6yX2vmN6bHT3nQ4JThB6k';
+const token = process.env.BOT_TOKEN || '8167818831:AAEIS41PNZ7eE0y2X6mV68HT3UmQ4JTwB6k';
 const url = process.env.WEBAPP_URL || 'https://web-production-c2856.up.railway.app';
 
 let bot;
