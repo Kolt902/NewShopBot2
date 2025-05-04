@@ -25,9 +25,21 @@ bot.setWebHook(`${url}/bot${token}`);
 // Bot commands
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  bot.sendMessage(chatId, 'Добро пожаловать в ESENTION!', {
+  bot.sendMessage(chatId, 'Добро пожаловать в ESENTION! 👋\n\nВыберите категорию:', {
     reply_markup: {
       inline_keyboard: [
+        [
+          { text: '🎩 Old Money', callback_data: 'category_oldmoney' },
+          { text: '👕 Streetwear', callback_data: 'category_streetwear' }
+        ],
+        [
+          { text: '💎 Luxury', callback_data: 'category_luxury' },
+          { text: '🏃‍♂️ Sport', callback_data: 'category_sport' }
+        ],
+        [
+          { text: '👨 Мужчинам', callback_data: 'gender_men' },
+          { text: '👩 Женщинам', callback_data: 'gender_women' }
+        ],
         [{
           text: '🛍 Открыть каталог',
           web_app: { url: `${url}/index.html` }
@@ -35,6 +47,34 @@ bot.onText(/\/start/, (msg) => {
       ]
     }
   });
+});
+
+// Handle category selection
+bot.on('callback_query', (query) => {
+  const chatId = query.message.chat.id;
+  const data = query.data;
+
+  if (data.startsWith('category_')) {
+    const category = data.split('_')[1];
+    bot.sendMessage(chatId, `Открываю каталог ${category}`, {
+      reply_markup: {
+        inline_keyboard: [[{
+          text: '🛍 Смотреть товары',
+          web_app: { url: `${url}/index.html?category=${category}` }
+        }]]
+      }
+    });
+  } else if (data.startsWith('gender_')) {
+    const gender = data.split('_')[1];
+    bot.sendMessage(chatId, `Открываю раздел ${gender === 'men' ? 'мужской' : 'женской'} одежды`, {
+      reply_markup: {
+        inline_keyboard: [[{
+          text: '🛍 Смотреть товары',
+          web_app: { url: `${url}/index.html?gender=${gender}` }
+        }]]
+      }
+    });
+  }
 });
 
 app.listen(port, () => {
