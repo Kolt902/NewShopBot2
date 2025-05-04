@@ -1,22 +1,27 @@
 const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
+const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 3860;
-const token = '8167818831:AAEIS41PNZ7eE0y2X6mV68HT3UmQ4JTwB6k';
-const url = 'https://web-production-c2856.up.railway.app';
+const port = process.env.PORT || 3000;
+const token = process.env.BOT_TOKEN || '8167818831:AAEIS41PNZ7eE0y2X6mV68HT3UmQ4JTwB6k';
+const url = process.env.APP_URL || 'https://web-production-c2856.up.railway.app';
 
 // Serve static files
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-// Create bot
+// Create bot instance
 const bot = new TelegramBot(token, { webHook: { port } });
+
+// Set webhook
 bot.setWebHook(`${url}/bot${token}`);
 
-// Bot commands
+// Welcome message and main menu
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  bot.sendMessage(chatId, 'Добро пожаловать в ESENTION! 👋\n\nВыберите категорию:', {
+  
+  bot.sendMessage(chatId, 'Добро пожаловать в ESENTION! 🛍\n\nВыберите категорию:', {
     reply_markup: {
       inline_keyboard: [
         [
@@ -33,7 +38,7 @@ bot.onText(/\/start/, (msg) => {
         ],
         [{
           text: '🛍 Открыть каталог',
-          web_app: { url: `${url}/index.html` }
+          web_app: { url: `${url}` }
         }]
       ]
     }
@@ -47,25 +52,43 @@ bot.on('callback_query', (query) => {
 
   if (data.startsWith('category_')) {
     const category = data.split('_')[1];
-    bot.sendMessage(chatId, `Открываю каталог ${category}`, {
+    bot.sendMessage(chatId, `Выбрана категория: ${category}`, {
       reply_markup: {
         inline_keyboard: [[{
           text: '🛍 Смотреть товары',
-          web_app: { url: `${url}/index.html?category=${category}` }
+          web_app: { url: `${url}?category=${category}` }
         }]]
       }
     });
   } else if (data.startsWith('gender_')) {
     const gender = data.split('_')[1];
-    bot.sendMessage(chatId, `Открываю раздел ${gender === 'men' ? 'мужской' : 'женской'} одежды`, {
+    const genderText = gender === 'men' ? 'мужской' : 'женской';
+    bot.sendMessage(chatId, `Выбран раздел ${genderText} одежды`, {
       reply_markup: {
         inline_keyboard: [[{
           text: '🛍 Смотреть товары',
-          web_app: { url: `${url}/index.html?gender=${gender}` }
+          web_app: { url: `${url}?gender=${gender}` }
         }]]
       }
     });
   }
+});
+
+// Handle web app data
+app.post(`/bot${token}`, (req, res) => {
+  const { queryId, products, totalAmount } = req.body;
+  
+  // Process the order
+  bot.answerWebAppQuery(queryId, {
+    type: 'article',
+    id: queryId,
+    title: 'Заказ оформлен',
+    input_message_content: {
+      message_text: `Заказ на сумму ${totalAmount} ₽ успешно оформлен!`
+    }
+  }).catch(console.error);
+  
+  res.sendStatus(200);
 });
 
 // Start server

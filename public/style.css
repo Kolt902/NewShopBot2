@@ -28,21 +28,20 @@ body {
 
 /* Header */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 15px 20px;
-    background-color: var(--secondary-color);
+    background: var(--secondary-color);
     position: sticky;
     top: 0;
     z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid var(--gray-light);
 }
 
 .header h1 {
     font-size: 24px;
     font-weight: 700;
-    letter-spacing: 1px;
 }
 
 .search-box {
@@ -57,20 +56,13 @@ body {
     border: none;
     background: none;
     outline: none;
-    padding-right: 8px;
-    font-size: 14px;
     width: 150px;
-}
-
-.search-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
+    font-size: 14px;
 }
 
 /* Promo Banner */
 .promo-banner {
-    background-color: var(--primary-color);
+    background: var(--primary-color);
     color: var(--secondary-color);
     text-align: center;
     padding: 20px;
@@ -81,12 +73,7 @@ body {
     margin-bottom: 8px;
 }
 
-.promo-banner p {
-    font-size: 14px;
-    opacity: 0.8;
-}
-
-/* Section Styles */
+/* Styles Grid */
 .section {
     padding: 20px;
     margin-bottom: 20px;
@@ -98,25 +85,23 @@ body {
     font-weight: 600;
 }
 
-/* Styles Grid */
 .styles-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
-    margin-bottom: 30px;
 }
 
 .style-card {
     position: relative;
-    background-size: cover;
-    background-position: center;
+    height: 180px;
     border-radius: 12px;
     padding: 20px;
-    height: 180px;
+    color: white;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    color: var(--secondary-color);
+    background-size: cover;
+    background-position: center;
     overflow: hidden;
 }
 
@@ -127,7 +112,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7));
     z-index: 1;
 }
 
@@ -136,14 +121,14 @@ body {
     z-index: 2;
 }
 
+.style-card.old-money { background-image: url('https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?w=500'); }
+.style-card.streetwear { background-image: url('https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=500'); }
+.style-card.luxury { background-image: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=500'); }
+.style-card.sport { background-image: url('https://images.unsplash.com/photo-1483721310020-03333e577078?w=500'); }
+
 .style-card h3 {
     font-size: 24px;
     margin-bottom: 5px;
-}
-
-.style-card p {
-    font-size: 14px;
-    opacity: 0.8;
 }
 
 .style-card .label {
@@ -154,10 +139,9 @@ body {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    font-weight: 500;
 }
 
-/* Seasons Grid */
+/* Gender Sections */
 .seasons-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -165,7 +149,7 @@ body {
 }
 
 .season-card {
-    background-color: var(--gray-light);
+    background: var(--gray-light);
     border-radius: 12px;
     padding: 20px;
     height: 200px;
@@ -176,7 +160,6 @@ body {
 
 .season-card h3 {
     font-size: 28px;
-    margin-bottom: 10px;
 }
 
 .season-label {
@@ -195,7 +178,6 @@ body {
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
     align-self: flex-start;
 }
 
@@ -215,29 +197,9 @@ body {
     border-radius: 20px;
     white-space: nowrap;
     cursor: pointer;
-    font-weight: 500;
 }
 
 /* Products Grid */
-.catalog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.filters-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--gray-light);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
 .products-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -256,6 +218,15 @@ body {
     padding-top: 100%;
 }
 
+.product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .favorite-btn {
     position: absolute;
     top: 10px;
@@ -270,55 +241,6 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 20px;
-}
-
-.image-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.product-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.slider-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255,255,255,0.8);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 20px;
-    z-index: 2;
-}
-
-.slider-btn.prev { left: 10px; }
-.slider-btn.next { right: 10px; }
-
-.brand-tag {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.7);
-    color: var(--secondary-color);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
 }
 
 .product-info {
@@ -337,21 +259,10 @@ body {
     margin-bottom: 8px;
 }
 
-.product-category {
-    font-size: 12px;
-    color: var(--gray-dark);
-    margin-bottom: 12px;
-}
-
-.sizes-grid h4 {
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
 .size-buttons {
     display: flex;
     gap: 8px;
-    margin-bottom: 15px;
+    margin: 10px 0;
 }
 
 .size-btn {
@@ -360,19 +271,18 @@ body {
     padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
 }
 
 .size-btn.selected {
     background: var(--primary-color);
     color: var(--secondary-color);
-    border-color: var(--primary-color);
 }
 
 .product-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 15px;
 }
 
 .product-price {
@@ -387,7 +297,6 @@ body {
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
 }
 
 /* Bottom Navigation */
@@ -419,117 +328,25 @@ body {
     width: 24px;
     height: 24px;
     margin-bottom: 4px;
-    fill: currentColor;
 }
 
 .nav-item span {
     font-size: 12px;
 }
 
-/* Responsive Design */
+/* Dark Theme */
+body.dark-theme {
+    --primary-color: #ffffff;
+    --secondary-color: #1f1f1f;
+    --gray-light: #2f2f2f;
+    --gray-dark: #cccccc;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .styles-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .seasons-grid {
-        grid-template-columns: 1fr;
-    }
-    
+    .styles-grid,
+    .seasons-grid,
     .products-grid {
         grid-template-columns: 1fr;
     }
-    
-    .search-box input {
-        width: 120px;
-    }
-}
-
-/* Dark Theme */
-body.dark-theme {
-  --primary-color: #ffffff;
-  --secondary-color: #1f1f1f;
-  --gray-light: #2f2f2f;
-  --gray-dark: #cccccc;
-}
-
-.dark-theme .header {
-  background-color: var(--secondary-color);
-  border-bottom-color: var(--gray-light);
-}
-
-.dark-theme .search-box {
-  background: var(--gray-light);
-}
-
-.dark-theme .search-box input {
-  color: var(--primary-color);
-}
-
-.dark-theme .brand-btn {
-  background: var(--gray-light);
-  color: var(--primary-color);
-}
-
-.dark-theme .season-card {
-  background-color: var(--gray-light);
-  color: var(--primary-color);
-}
-
-.dark-theme .product-card {
-  background: var(--gray-light);
-}
-
-.dark-theme .product-info {
-  color: var(--primary-color);
-}
-
-.dark-theme .size-btn {
-  border-color: var(--gray-dark);
-  color: var(--primary-color);
-}
-
-.dark-theme .bottom-nav {
-  background: var(--secondary-color);
-  border-top-color: var(--gray-light);
-}
-
-/* Улучшения для карточек товаров */
-.product-card {
-  transition: transform 0.2s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-}
-
-.favorite-btn {
-  transition: transform 0.2s ease;
-}
-
-.favorite-btn:hover {
-  transform: scale(1.1);
-}
-
-.add-to-cart-btn {
-  transition: background-color 0.2s ease;
-}
-
-.add-to-cart-btn:hover {
-  opacity: 0.9;
-}
-
-/* Индикатор корзины */
-.nav-item.has-items {
-  color: var(--accent-color);
-}
-
-.nav-item.has-items svg {
-  fill: var(--accent-color);
-}
-
-/* Активные фильтры */
-.brand-btn.active {
-  background: var(--primary-color);
-  color: var(--secondary-color);
 }
