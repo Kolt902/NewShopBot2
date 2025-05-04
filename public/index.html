@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esention</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Esention</h1>
+      <div class="banner">СКИДКА 10% НА ВСЁ ТОВАРИЩЫ</div>
+    </header>
+
+    <nav class="categories">
+      <button class="category-btn active" data-category="old-money">Old Money</button>
+      <button class="category-btn" data-category="streetwear">Streetwear</button>
+      <button class="category-btn" data-category="luxury">Luxury</button>
+      <button class="category-btn" data-category="sport">Sport</button>
+    </nav>
+
+    <div class="filters">
+      <select class="filter-select" id="seasonFilter">
+        <option value="" disabled selected>Выберите сезон</option>
+        <option value="spring">Spring</option>
+        <option value="summer">Summer</option>
+        <option value="autumn">Autumn</option>
+        <option value="winter">Winter</option>
+      </select>
+    </div>
+
+    <div class="catalog">
+      <div class="product-card">
+        <div class="product-header">
+          <h3 class="product-title">Джинсы Adidas</h3>
+          <button class="favorite-btn">❤️</button>
+        </div>
+        <p class="product-price">5 999 ₽</p>
+        <select class="size-select">
+          <option value="" disabled selected>Размер</option>
+          <option value="30">30</option>
+          <option value="32">32</option>
+          <option value="34">34</option>
+        </select>
+        <button class="add-to-cart" onclick="addToCart('Джинсы Adidas', 5999, this)">В корзину</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-header">
+          <h3 class="product-title">Футболка Nike</h3>
+          <button class="favorite-btn">❤️</button>
+        </div>
+        <p class="product-price">2 999 ₽</p>
+        <select class="size-select">
+          <option value="" disabled selected>Размер</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+        </select>
+        <button class="add-to-cart" onclick="addToCart('Футболка Nike', 2999, this)">В корзину</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-header">
+          <h3 class="product-title">Кроссовки Puma</h3>
+          <button class="favorite-btn">❤️</button>
+        </div>
+        <p class="product-price">8 999 ₽</p>
+        <select class="size-select">
+          <option value="" disabled selected>Размер</option>
+          <option value="40">40</option>
+          <option value="41">41</option>
+          <option value="42">42</option>
+          <option value="43">43</option>
+        </select>
+        <button class="add-to-cart" onclick="addToCart('Кроссовки Puma', 8999, this)">В корзину</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="handleNavClick('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-text">Главная</span>
+    </button>
+    <button class="nav-btn" onclick="handleNavClick('cart')">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-text">Корзина</span>
+    </button>
+    <button class="nav-btn" onclick="handleNavClick('favorites')">
+      <span class="nav-icon">❤️</span>
+      <span class="nav-text">Избранное</span>
+    </button>
+    <button class="nav-btn" onclick="handleNavClick('profile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-text">Профиль</span>
+    </button>
+  </nav>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let cart = [];
+    let favorites = new Set();
+    
+    // Обработка категорий
+    document.querySelectorAll('.category-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        console.log('Выбрана категория:', button.dataset.category);
+      });
+    });
+
+    // Обработка избранного
+    document.querySelectorAll('.favorite-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const card = button.closest('.product-card');
+        const title = card.querySelector('.product-title').textContent;
+        
+        if (favorites.has(title)) {
+          favorites.delete(title);
+          button.style.opacity = '0.5';
+        } else {
+          favorites.add(title);
+          button.style.opacity = '1';
+        }
+        
+        console.log('Избранное:', Array.from(favorites));
+      });
+    });
+
+    // Добавление в корзину
+    function addToCart(name, price, button) {
+      const card = button.closest('.product-card');
+      const sizeSelect = card.querySelector('.size-select');
+      
+      if (sizeSelect.value === "") {
+        tg.showAlert('Пожалуйста, выберите размер');
+        return;
+      }
+
+      const item = {
+        name,
+        price,
+        size: sizeSelect.value
+      };
+
+      cart.push(item);
+      
+      // Анимация кнопки
+      button.classList.add('added');
+      button.textContent = 'Добавлено ✓';
+      
+      setTimeout(() => {
+        button.classList.remove('added');
+        button.textContent = 'В корзину';
+      }, 1500);
+
+      tg.showAlert(`${name} (размер ${sizeSelect.value}) добавлен в корзину`);
+    }
+
+    // Обработка навигации
+    function handleNavClick(section) {
+      console.log('Переход в раздел:', section);
+      
+      if (section === 'cart' && cart.length > 0) {
+        const order = {
+          items: cart,
+          total: cart.reduce((sum, item) => sum + item.price, 0)
+        };
+        tg.sendData(JSON.stringify(order));
+      } else if (section === 'cart') {
+        tg.showAlert('Корзина пуста');
+      }
+    }
+
+    // Инициализация Telegram Web App
+    tg.ready();
+  </script>
+</body>
+</html>
