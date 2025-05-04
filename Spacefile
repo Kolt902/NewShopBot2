@@ -1,0 +1,14 @@
+v: 0
+micros:
+  - name: telegram-bot
+    src: .
+    engine: nodejs16
+    primary: true
+    public: true
+    presets:
+      env:
+        - name: BOT_TOKEN
+          description: Telegram Bot Token
+        - name: ADMIN_CHAT_ID
+          description: Admin Chat ID for notifications
+    run: node index.js 
