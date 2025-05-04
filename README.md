@@ -1,6 +1,40 @@
-# Telegram Shop Bot
+# ESENTION Shop Bot
 
-A Telegram Web App for an online clothing store built with Node.js, Express, and Telegraf.
+Telegram Mini App для магазина одежды ESENTION.
+
+## Установка и запуск
+
+1. Установите зависимости:
+```bash
+npm install
+```
+
+2. Запустите сервер:
+```bash
+npm start
+```
+
+Для разработки используйте:
+```bash
+npm run dev
+```
+
+## Структура проекта
+
+- `public/` - статические файлы
+  - `index.html` - главная страница
+  - `style.css` - стили
+  - `app.js` - клиентский JavaScript
+  - `products.json` - каталог товаров
+  - `images/` - изображения товаров
+- `server.js` - серверная часть
+- `package.json` - зависимости проекта
+
+## Конфигурация
+
+- Порт: 3860
+- Webhook URL: https://web-production-c2856.up.railway.app
+- Bot Token: 6187617831:AAEI54IPnZ7e6yX2vmN6bHT3nQ4JThB6k
 
 ## Features
 

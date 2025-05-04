@@ -1,0 +1,48 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Костюм Old Money Classic",
+      "brand": "ESENTION",
+      "category": "Old Money",
+      "description": "Элегантный костюм в классическом стиле",
+      "price": 35900,
+      "images": ["old-money-suit-1.jpg", "old-money-suit-2.jpg"],
+      "sizes": ["46", "48", "50", "52"],
+      "style": "old-money"
+    },
+    {
+      "id": 2,
+      "name": "Худи Streetwear Oversized",
+      "brand": "ESENTION",
+      "category": "Streetwear",
+      "description": "Объемное худи в уличном стиле",
+      "price": 12900,
+      "images": ["streetwear-hoodie-1.jpg"],
+      "sizes": ["S", "M", "L", "XL"],
+      "style": "streetwear"
+    },
+    {
+      "id": 3,
+      "name": "Кроссовки Sport Pro",
+      "brand": "Nike",
+      "category": "Sport",
+      "description": "Профессиональные беговые кроссовки",
+      "price": 15900,
+      "images": ["sport-sneakers-1.jpg", "sport-sneakers-2.jpg"],
+      "sizes": ["40", "41", "42", "43", "44"],
+      "style": "sport"
+    },
+    {
+      "id": 4,
+      "name": "Сумка Luxury Gold",
+      "brand": "Balenciaga",
+      "category": "Luxury",
+      "description": "Премиальная сумка из натуральной кожи",
+      "price": 89900,
+      "images": ["luxury-bag-1.jpg"],
+      "sizes": ["ONE SIZE"],
+      "style": "luxury"
+    }
+  ]
+} 

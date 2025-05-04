@@ -1,6 +1,203 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// Основные элементы
+const productGrid = document.getElementById('productGrid');
+const searchInput = document.querySelector('.search-box input');
+const brandButtons = document.querySelectorAll('.brand-btn');
+const styleCards = document.querySelectorAll('.style-card');
+const cartButton = document.querySelector('.nav-item:nth-child(2)');
+
+// Состояние приложения
+let products = [];
+let cart = [];
+let currentFilter = {
+  style: '',
+  brand: '',
+  search: ''
+};
+
+// Загрузка товаров
+async function loadProducts() {
+  try {
+    const response = await fetch('products.json');
+    const data = await response.json();
+    products = data.products;
+    renderProducts(products);
+  } catch (error) {
+    console.error('Ошибка загрузки товаров:', error);
+  }
+}
+
+// Отрисовка товаров
+function renderProducts(productsToRender) {
+  productGrid.innerHTML = '';
+  const template = document.getElementById('productTemplate');
+
+  productsToRender.forEach(product => {
+    const clone = template.content.cloneNode(true);
+    
+    // Заполняем данные товара
+    clone.querySelector('.product-image').src = `images/${product.images[0]}`;
+    clone.querySelector('.product-name').textContent = product.name;
+    clone.querySelector('.product-description').textContent = product.description;
+    clone.querySelector('.product-category').textContent = product.category;
+    clone.querySelector('.product-price').textContent = `${product.price.toLocaleString()} ₽`;
+    clone.querySelector('.brand-tag').textContent = product.brand;
+
+    // Размеры
+    const sizeButtons = clone.querySelector('.size-buttons');
+    product.sizes.forEach(size => {
+      const button = document.createElement('button');
+      button.className = 'size-btn';
+      button.textContent = size;
+      button.onclick = () => selectSize(button, product.id);
+      sizeButtons.appendChild(button);
+    });
+
+    // Кнопка добавления в корзину
+    const addToCartBtn = clone.querySelector('.add-to-cart-btn');
+    addToCartBtn.onclick = () => addToCart(product);
+
+    // Кнопка избранного
+    const favoriteBtn = clone.querySelector('.favorite-btn');
+    favoriteBtn.onclick = () => toggleFavorite(product.id);
+
+    productGrid.appendChild(clone);
+  });
+}
+
+// Фильтрация товаров
+function filterProducts() {
+  let filtered = products;
+
+  if (currentFilter.style) {
+    filtered = filtered.filter(p => p.style === currentFilter.style);
+  }
+
+  if (currentFilter.brand) {
+    filtered = filtered.filter(p => p.brand === currentFilter.brand);
+  }
+
+  if (currentFilter.search) {
+    const search = currentFilter.search.toLowerCase();
+    filtered = filtered.filter(p => 
+      p.name.toLowerCase().includes(search) ||
+      p.description.toLowerCase().includes(search) ||
+      p.brand.toLowerCase().includes(search)
+    );
+  }
+
+  renderProducts(filtered);
+}
+
+// Обработчики событий
+searchInput.addEventListener('input', (e) => {
+  currentFilter.search = e.target.value;
+  filterProducts();
+});
+
+brandButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const brand = button.textContent;
+    currentFilter.brand = brand === 'Все' ? '' : brand;
+    
+    // Обновляем активную кнопку
+    brandButtons.forEach(btn => btn.classList.remove('active'));
+    if (brand !== 'Все') button.classList.add('active');
+    
+    filterProducts();
+  });
+});
+
+styleCards.forEach(card => {
+  card.addEventListener('click', () => {
+    const style = card.classList[1]; // old-money, streetwear, etc.
+    currentFilter.style = style;
+    filterProducts();
+  });
+});
+
+// Функции корзины
+function selectSize(button, productId) {
+  // Убираем выделение с других кнопок размера
+  const sizeButtons = button.parentElement.querySelectorAll('.size-btn');
+  sizeButtons.forEach(btn => btn.classList.remove('selected'));
+  button.classList.add('selected');
+}
+
+function addToCart(product) {
+  const sizeButton = document.querySelector(`.product-card[data-id="${product.id}"] .size-btn.selected`);
+  if (!sizeButton) {
+    alert('Пожалуйста, выберите размер');
+    return;
+  }
+
+  const selectedSize = sizeButton.textContent;
+  const cartItem = {
+    ...product,
+    selectedSize,
+    quantity: 1
+  };
+
+  cart.push(cartItem);
+  updateCartButton();
+}
+
+function updateCartButton() {
+  const cartCount = cart.length;
+  if (cartCount > 0) {
+    cartButton.classList.add('has-items');
+    cartButton.querySelector('span').textContent = `Корзина (${cartCount})`;
+  }
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+  loadProducts();
+  
+  // Настройка темы Telegram WebApp
+  if (tg.colorScheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  }
+  
+  // Показываем MainButton при наличии товаров в корзине
+  tg.MainButton.setParams({
+    text: 'Оформить заказ',
+    color: '#000000'
+  });
+});
+
+// Настройка навигации
+function setupNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            navItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+
+    // Обработчики категорий
+    const styleCards = document.querySelectorAll('.style-card');
+    styleCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const style = card.classList[1]; // old-money, streetwear, etc.
+            filterProducts(style);
+        });
+    });
+
+    // Обработчики брендов
+    const brandBtns = document.querySelectorAll('.brand-btn');
+    brandBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const brand = btn.textContent;
+            filterProducts(null, brand);
+        });
+    });
+}
+
 // Товары магазина
 const products = [
     {
@@ -26,7 +223,6 @@ const products = [
     }
 ];
 
-let cart = [];
 let totalAmount = 0;
 
 // Функция для обновления общей суммы
@@ -36,38 +232,6 @@ function updateTotalAmount() {
     
     const orderButton = document.getElementById('order-button');
     orderButton.style.display = cart.length > 0 ? 'block' : 'none';
-}
-
-// Функция для добавления товара в корзину
-function addToCart(productId, size) {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    const cartItem = {
-        id: productId,
-        title: product.title,
-        price: product.price,
-        size: size
-    };
-
-    cart.push(cartItem);
-    updateTotalAmount();
-
-    // Анимация кнопки
-    const button = document.querySelector(`[data-product-id="${productId}"]`);
-    button.classList.add('added');
-    button.textContent = 'Добавлено ✓';
-    
-    setTimeout(() => {
-        button.classList.remove('added');
-        button.textContent = 'В корзину';
-    }, 1500);
-
-    tg.showPopup({
-        title: 'Товар добавлен',
-        message: `${product.title} (размер ${size}) добавлен в корзину`,
-        buttons: [{type: 'ok'}]
-    });
 }
 
 // Функция для оформления заказа
@@ -138,7 +302,7 @@ function createProductCard(product) {
             });
             return;
         }
-        addToCart(product.id, selectedSize);
+        addToCart(product);
     };
 
     card.appendChild(image);

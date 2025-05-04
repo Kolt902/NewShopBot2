@@ -2,153 +2,167 @@ require('dotenv').config();
 const express = require('express');
 const { Telegraf } = require('telegraf');
 const path = require('path');
+const cors = require('cors');
 
-// Загрузка и проверка переменных окружения
+// Конфигурация
 const config = {
-  BOT_TOKEN: process.env.BOT_TOKEN,
-  ADMIN_CHAT_ID: process.env.ADMIN_CHAT_ID,
-  PORT: process.env.PORT || 3000,
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  APP_URL: process.env.NODE_ENV === 'production' 
-    ? (process.env.RAILWAY_STATIC_URL || process.env.WEBHOOK_URL)
-    : 'http://localhost:3000'
+  BOT_TOKEN: '6187617831:AAEI54IPnZ7e6yX2vmN6bHT3nQ4JThB6k',
+  PORT: 3860
 };
 
-// Проверка обязательных переменных
-if (!config.BOT_TOKEN) {
-  throw new Error('BOT_TOKEN environment variable is required');
-}
+const WEB_APP_URL = 'https://web-production-c2856.up.railway.app';
 
-if (!config.ADMIN_CHAT_ID) {
-  console.warn('Warning: ADMIN_CHAT_ID is not set. Admin notifications will be disabled.');
-}
-
-// Инициализация приложения
+// Инициализация
 const app = express();
 const bot = new Telegraf(config.BOT_TOKEN);
 
-// Логирование конфигурации
-console.log('Initialization - Environment:', config.NODE_ENV);
-console.log('Initialization - App URL:', config.APP_URL);
-console.log('Initialization - Bot Token:', config.BOT_TOKEN ? 'Present' : 'Missing');
-console.log('Initialization - Admin Chat ID:', config.ADMIN_CHAT_ID || 'Not set');
-console.log('Initialization - Port:', config.PORT);
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-// Middleware для логирования
-bot.use((ctx, next) => {
-  console.log('New bot update:', {
-    updateType: ctx.updateType,
-    updateSubType: ctx.updateSubTypes?.[0],
-    from: ctx.from?.id,
-    text: ctx.message?.text
-  });
-  return next();
+// Логирование запросов
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+  next();
 });
 
-// Middleware Express
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    bot_info: {
+      webhook_url: config.WEBHOOK_URL,
+      web_app_url: WEB_APP_URL,
+      port: config.PORT
+    }
+  });
+});
 
-// Bot commands
+// Команда /start
 bot.command('start', async (ctx) => {
-  console.log('Start command received from:', ctx.from.id);
   try {
-    console.log('Sending welcome message...');
-    const result = await ctx.reply('Добро пожаловать в наш магазин!', {
+    const welcomeMessage = `
+🎉 *Добро пожаловать в ESENTION!*
+
+Мы рады представить вам нашу коллекцию одежды:
+
+*👔 Old Money*
+Элегантность и утонченность в каждой детали
+
+*🧢 Streetwear*
+Современный уличный стиль для ярких личностей
+
+*💎 Luxury*
+Премиальные бренды для особых случаев
+
+*🏃‍♂️ Sport*
+Комфортная спортивная одежда
+
+*🎁 АКЦИЯ:*
+Скидка 10% на первую покупку!
+`;
+
+    await ctx.replyWithMarkdown(welcomeMessage, {
       reply_markup: {
-        keyboard: [
-          [{ text: 'Открыть каталог' }]
-        ],
-        resize_keyboard: true
+        inline_keyboard: [
+          [{ 
+            text: '🛍 Открыть магазин', 
+            web_app: { url: WEB_APP_URL } 
+          }]
+        ]
       }
     });
-    console.log('Welcome message sent successfully:', result);
   } catch (error) {
-    console.error('Error in start command:', error);
-    try {
-      await ctx.reply('Извините, произошла ошибка. Попробуйте позже.');
-    } catch (replyError) {
-      console.error('Error sending error message:', replyError);
+    console.error('Ошибка:', error);
+    await ctx.reply('Извините, произошла ошибка. Попробуйте позже.');
+  }
+});
+
+// Обработка данных от Web App
+bot.on('message', async (ctx) => {
+  try {
+    const webAppData = ctx.message?.web_app_data?.data;
+    if (!webAppData) return;
+
+    const data = JSON.parse(webAppData);
+    if (data.type === 'checkout') {
+      const items = data.items.map(item => 
+        `• ${item.name} (${item.selectedSize}) - ${item.price}`
+      ).join('\n');
+
+      await ctx.reply(
+        `🛍 Ваш заказ:\n\n${items}\n\nСпасибо за покупку! Мы свяжемся с вами для подтверждения заказа.`,
+        { parse_mode: 'HTML' }
+      );
+
+      // Отправка уведомления администратору
+      if (config.ADMIN_CHAT_ID) {
+        await bot.telegram.sendMessage(
+          config.ADMIN_CHAT_ID,
+          `🛍 Новый заказ!\n\nПользователь: ${ctx.from.first_name} ${ctx.from.last_name || ''} (@${ctx.from.username || 'нет username'})\n\n${items}`,
+          { parse_mode: 'HTML' }
+        );
+      }
     }
+  } catch (error) {
+    console.error('Web App data processing error:', error);
+    await ctx.reply('Извините, произошла ошибка при обработке заказа.');
   }
-});
-
-// Обработка текстовых сообщений
-bot.on('text', async (ctx) => {
-  if (ctx.message.text === 'Открыть каталог') {
-    await ctx.reply('В режиме разработки каталог недоступен. Используйте production версию для доступа к веб-приложению.');
-  }
-});
-
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Обработка заказов
 app.post('/order', async (req, res) => {
-  const order = req.body;
-  console.log('New order received:', order);
-  
   try {
-    if (!config.ADMIN_CHAT_ID) {
-      throw new Error('Admin chat ID not configured');
-    }
-
-    const orderItems = order.items.map(item => 
-      `• ${item.title} (размер: ${item.size}) - ${item.price} ₽`
+    const order = req.body;
+    const items = order.items.map(item => 
+      `• ${item.title} (${item.size}) - ${item.price} ₽`
     ).join('\n');
 
-    const message = `
-🛍 Новый заказ!
-
-Товары:
-${orderItems}
-
-💰 Итого: ${order.total} ₽
-`;
-
-    await bot.telegram.sendMessage(
-      config.ADMIN_CHAT_ID,
-      message,
+    await bot.telegram.sendMessage(config.ADMIN_CHAT_ID, 
+      `🛍 Новый заказ!\n\n${items}\n\n💰 Итого: ${order.total} ₽`,
       { parse_mode: 'HTML' }
     );
-
     res.json({ status: 'success' });
   } catch (error) {
-    console.error('Error processing order:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Failed to process order. Please try again later.' 
-    });
+    console.error('Order error:', error);
+    res.status(500).json({ status: 'error', message: error.message });
   }
 });
 
-// Запуск сервера
-const server = app.listen(config.PORT, () => {
-  console.log(`Server running on port ${config.PORT}`);
+// Webhook endpoint
+app.post('/webhook', (req, res) => {
+  bot.handleUpdate(req.body, res);
 });
 
-// Запуск бота в режиме polling для разработки
-console.log('Starting bot in polling mode...');
+// Root endpoint
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Обработка ошибок бота
+bot.catch((err, ctx) => {
+  console.error('Ошибка бота:', err);
+  ctx.reply('Произошла ошибка при обработке команды');
+});
+
+// Запускаем бота
 bot.launch()
   .then(() => {
-    console.log('Bot successfully started in polling mode');
+    console.log('Бот успешно запущен');
+    
+    // Запускаем веб-сервер
+    app.listen(config.PORT, '0.0.0.0', () => {
+      console.log(`Веб-сервер запущен на порту ${config.PORT}`);
+      console.log(`Web App URL: ${WEB_APP_URL}`);
+    });
   })
-  .catch(error => {
-    console.error('Failed to start bot:', error);
+  .catch((error) => {
+    console.error('Ошибка при запуске бота:', error);
     process.exit(1);
   });
 
 // Graceful shutdown
-process.once('SIGINT', () => {
-  console.log('Shutting down...');
-  bot.stop('SIGINT');
-  server.close();
-});
-
-process.once('SIGTERM', () => {
-  console.log('Shutting down...');
-  bot.stop('SIGTERM');
-  server.close();
-});
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
