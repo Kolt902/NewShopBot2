@@ -1,13 +1,6 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
 const express = require('express');
-import { Telegraf } from 'telegraf';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { Telegraf } = require('telegraf');
+const path = require('path');
 
 // Check for required environment variables
 if (!process.env.BOT_TOKEN) {
