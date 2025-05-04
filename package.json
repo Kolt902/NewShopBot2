@@ -5,11 +5,12 @@
   "main": "index.js",
   "type": "commonjs",
   "engines": {
-    "node": "18.x"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "postinstall": "npm install"
   },
   "keywords": [],
   "author": "",
