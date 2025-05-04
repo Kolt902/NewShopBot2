@@ -2,8 +2,12 @@
   "name": "esention-shop-bot",
   "version": "1.0.0",
   "main": "server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "install": "npm install --production"
   },
   "dependencies": {
     "express": "4.18.2",
