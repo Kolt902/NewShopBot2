@@ -11,9 +11,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "build": "echo 'Build step completed'",
-    "lint": "eslint src/",
-    "test": "echo 'No tests specified'"
+    "build": "echo 'Build step completed'"
   },
   "dependencies": {
     "cors": "^2.8.5",
