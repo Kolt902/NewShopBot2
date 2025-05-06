@@ -6,7 +6,7 @@ import { dirname, join } from 'path';
 import { config } from './config/config.js';
 import { logger } from './config/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { startCommand, handleWebAppData } from './handlers/botHandlers.js';
+import { startCommand, helpCommand, catalogCommand, handleWebAppData } from './handlers/botHandlers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -48,7 +48,18 @@ app.get('/health', (req, res) => {
 
 // Bot commands
 bot.command('start', startCommand);
+bot.command('help', helpCommand);
+bot.command('catalog', catalogCommand);
 bot.on('message', handleWebAppData);
+
+// Set bot commands
+bot.telegram.setMyCommands([
+  { command: 'start', description: 'Открыть главное меню' },
+  { command: 'catalog', description: 'Открыть каталог товаров' },
+  { command: 'help', description: 'Показать помощь' }
+]).catch(error => {
+  logger.error('Error setting bot commands:', error);
+});
 
 // Error handling
 bot.catch((err, ctx) => {
