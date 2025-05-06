@@ -147,24 +147,33 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV === 'production') {
   console.log('Starting bot in production mode');
   // Set webhook in production
-  app.use(bot.webhookCallback('/webhook'));
-  
-  // Ensure webhook is set correctly
-  bot.telegram.deleteWebhook()
+  bot.telegram.setWebhook(`${process.env.APP_URL}/webhook`)
     .then(() => {
-      console.log('Old webhook deleted');
-      return bot.telegram.setWebhook(`${process.env.APP_URL}/webhook`);
+      console.log('Webhook set:', process.env.APP_URL);
+      const app = require('http').createServer((req, res) => {
+        if (req.method === 'POST' && req.url === '/webhook') {
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', () => {
+            try {
+              const update = JSON.parse(body);
+              bot.handleUpdate(update);
+              res.end('OK');
+            } catch (error) {
+              console.error('Error processing webhook:', error);
+              res.end('Error');
+            }
+          });
+        } else {
+          res.end('OK');
+        }
+      });
+      
+      app.listen(PORT, () => {
+        console.log('Webhook server started on port', PORT);
+      });
     })
-    .then(() => {
-      console.log('New webhook set:', `${process.env.APP_URL}/webhook`);
-      return bot.telegram.getWebhookInfo();
-    })
-    .then((info) => {
-      console.log('Webhook info:', info);
-    })
-    .catch((error) => {
-      console.error('Webhook setup error:', error);
-    });
+    .catch(console.error);
 } else {
   console.log('Starting bot in development mode');
   // Use polling in development
@@ -177,6 +186,6 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-}); 
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM')); 
