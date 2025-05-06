@@ -2,8 +2,15 @@ services:
   - type: web
     name: esention-bot
     env: node
+    plan: free
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: npm start
     envVars:
       - key: BOT_TOKEN
-        sync: false 
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: APP_URL
+        sync: false
+    autoDeploy: true
+    healthCheckPath: /health 

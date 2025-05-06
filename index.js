@@ -26,6 +26,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Webhook endpoint
+app.post('/webhook', (req, res) => {
+  try {
+    bot.handleUpdate(req.body, res);
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).send('Webhook Error');
+  }
+});
+
 // Debug endpoint to verify bot identity
 app.get('/debug', async (req, res) => {
   try {
@@ -130,49 +140,43 @@ bot.catch((err, ctx) => {
 // Start server and bot
 const PORT = process.env.PORT || 3000;
 
-// Production mode with webhook
 if (process.env.NODE_ENV === 'production') {
   console.log('Starting bot in production mode');
-  // Set webhook in production
-  bot.telegram.setWebhook(`${process.env.APP_URL}/webhook`)
+  
+  // Set webhook
+  const webhookUrl = `${process.env.APP_URL}/webhook`;
+  bot.telegram.setWebhook(webhookUrl)
     .then(() => {
-      console.log('Webhook set:', process.env.APP_URL);
-      const app = require('http').createServer((req, res) => {
-        if (req.method === 'POST' && req.url === '/webhook') {
-          let body = '';
-          req.on('data', chunk => body += chunk);
-          req.on('end', () => {
-            try {
-              const update = JSON.parse(body);
-              bot.handleUpdate(update);
-              res.end('OK');
-            } catch (error) {
-              console.error('Error processing webhook:', error);
-              res.end('Error');
-            }
-          });
-        } else {
-          res.end('OK');
-        }
-      });
-      
+      console.log('Webhook set:', webhookUrl);
       app.listen(PORT, () => {
         console.log('Webhook server started on port', PORT);
       });
     })
-    .catch(console.error);
+    .catch(error => {
+      console.error('Failed to set webhook:', error);
+      process.exit(1);
+    });
 } else {
   console.log('Starting bot in development mode');
-  // Use polling in development
   bot.launch()
     .then(() => {
       console.log('Bot started in polling mode');
+      app.listen(PORT, () => {
+        console.log('Development server started on port', PORT);
+      });
     })
-    .catch((error) => {
+    .catch(error => {
       console.error('Bot launch error:', error);
+      process.exit(1);
     });
 }
 
 // Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM')); 
+process.once('SIGINT', () => {
+  bot.stop('SIGINT');
+  process.exit(0);
+});
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM');
+  process.exit(0);
+}); 
