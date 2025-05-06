@@ -9,9 +9,10 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "build": "echo 'Build step completed'"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo 'Build step completed'",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "cors": "^2.8.5",
