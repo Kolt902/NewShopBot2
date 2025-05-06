@@ -6,7 +6,7 @@ import { dirname, join } from 'path';
 import { config } from './config/config.js';
 import { logger } from './config/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { startCommand, helpCommand, catalogCommand, handleWebAppData } from './handlers/botHandlers.js';
+import { commands } from './handlers/commands.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,10 +47,24 @@ app.get('/health', (req, res) => {
 });
 
 // Bot commands
-bot.command('start', startCommand);
-bot.command('help', helpCommand);
-bot.command('catalog', catalogCommand);
-bot.on('message', handleWebAppData);
+bot.command('start', commands.start);
+bot.command('help', commands.help);
+bot.command('catalog', commands.catalog);
+
+// Action handlers for category buttons
+bot.action(/^category_(.+)$/, async (ctx) => {
+  const category = ctx.match[1];
+  await ctx.reply(`Вы выбрали категорию: ${category}\nСкоро здесь появится каталог товаров!`);
+});
+
+bot.action(/^gender_(.+)$/, async (ctx) => {
+  const gender = ctx.match[1];
+  await ctx.reply(`Вы выбрали ${gender === 'men' ? 'мужскую' : 'женскую'} коллекцию\nСкоро здесь появится каталог товаров!`);
+});
+
+bot.action('open_catalog', async (ctx) => {
+  await commands.catalog(ctx);
+});
 
 // Set bot commands
 bot.telegram.setMyCommands([
