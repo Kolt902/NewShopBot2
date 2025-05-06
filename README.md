@@ -1,49 +1,68 @@
 # ESENTION Shop Bot
 
-Telegram Mini App for ESENTION clothing store.
+Telegram бот для премиального магазина одежды ESENTION с веб-приложением.
 
-## Environment Variables
+## Функциональность
 
-Required environment variables:
-- `BOT_TOKEN`: Telegram Bot Token
-- `PORT`: Server port (default: 3000)
-- `APP_URL`: Web App URL
+- Интеграция с Telegram Web App
+- Каталог товаров с категориями
+- Фильтрация по стилям (Old Money, Streetwear, Luxury, Sport)
+- Корзина и оформление заказов
+- Адаптивный дизайн
 
-## Development
+## Технологии
 
-```bash
-# Install dependencies
-npm install
+- Node.js
+- Express.js
+- Telegraf
+- Railway для деплоя
 
-# Run in development mode
-npm run dev
+## Переменные окружения
+
+```env
+BOT_TOKEN=your_telegram_bot_token
+APP_URL=your_railway_app_url
+PORT=3000
+WEBHOOK_PATH=/webhook
+NODE_ENV=production
 ```
 
-## Deployment on Railway
+## Установка и запуск
 
-1. Create a new project on Railway
-2. Connect your GitHub repository
-3. Add the required environment variables in Railway dashboard
-4. Deploy the main branch
+1. Клонировать репозиторий:
+```bash
+git clone https://github.com/Kolt902/NewShopBot2.git
+cd NewShopBot2
+```
 
-The app will automatically deploy when you push changes to the main branch.
-
-## Features
-
-- Categories: Old Money, Streetwear, Luxury, Sport
-- Sections for men and women
-- Product cards with images, sizes, prices
-- Shopping cart functionality
-- Telegram bot integration
-
-## Установка
-
+2. Установить зависимости:
 ```bash
 npm install
 ```
 
-## Запуск
+3. Создать файл .env и заполнить переменные окружения
 
+4. Запустить приложение:
 ```bash
 npm start
+```
+
+## Деплой
+
+Проект настроен для автоматического деплоя на Railway.
+При пуше в main ветку происходит автоматический деплой.
+
+## Структура проекта
+
+```
+├── src/
+│   ├── config/         # Конфигурация
+│   ├── handlers/       # Обработчики команд
+│   ├── middleware/     # Middleware
+│   └── index.js        # Точка входа
+├── public/             # Статические файлы
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+└── package.json
 ```
