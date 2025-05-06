@@ -112,26 +112,13 @@ bot.command('start', async (ctx) => {
   }
 });
 
-// Handle category selections
-bot.action(/^category_(.+)$/, async (ctx) => {
+// Handle button clicks
+bot.action(/.+/, async (ctx) => {
   try {
-    const category = ctx.match[1];
-    console.log('Category selected:', category);
     await ctx.answerCbQuery();
-    await ctx.reply(`Вы выбрали категорию: ${category}\nСкоро здесь появится каталог товаров!`);
+    await ctx.reply('Скоро здесь появится каталог товаров!');
   } catch (error) {
-    console.error('Error in category selection:', error);
-  }
-});
-
-bot.action(/^gender_(.+)$/, async (ctx) => {
-  try {
-    const gender = ctx.match[1];
-    console.log('Gender selected:', gender);
-    await ctx.answerCbQuery();
-    await ctx.reply(`Вы выбрали ${gender === 'men' ? 'мужскую' : 'женскую'} коллекцию\nСкоро здесь появится каталог товаров!`);
-  } catch (error) {
-    console.error('Error in gender selection:', error);
+    console.error('Error in button handler:', error);
   }
 });
 
