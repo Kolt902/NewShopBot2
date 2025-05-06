@@ -2,21 +2,15 @@ require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const express = require('express');
 
-// Debug logging
-console.log('Bot starting up...');
-console.log('Bot token (first 5 chars):', process.env.BOT_TOKEN?.substring(0, 5));
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('APP_URL:', process.env.APP_URL);
-
 // Initialize bot and express app
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const app = express();
 
-// Additional debug logging for webhook mode
-bot.telegram.getWebhookInfo().then(info => {
-  console.log('Current webhook info:', info);
-}).catch(err => {
-  console.error('Error getting webhook info:', err);
+// Debug logging
+console.log('Starting bot with config:', {
+  NODE_ENV: process.env.NODE_ENV,
+  APP_URL: process.env.APP_URL,
+  BOT_TOKEN_PREFIX: process.env.BOT_TOKEN?.substring(0, 10)
 });
 
 // Middleware
@@ -24,7 +18,12 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
+    hasToken: !!process.env.BOT_TOKEN
+  });
 });
 
 // Debug endpoint to verify bot identity
@@ -63,8 +62,15 @@ bot.command('testbot', async (ctx) => {
 
 // Strict command handling
 bot.use((ctx, next) => {
+  console.log('Received update:', {
+    type: ctx.updateType,
+    from: ctx.from?.id,
+    text: ctx.message?.text
+  });
+  
   if (ctx.message && ctx.message.text && !ctx.message.text.startsWith('/')) {
-    return; // Ignore non-command messages
+    console.log('Ignoring non-command message');
+    return;
   }
   return next();
 });
@@ -72,6 +78,7 @@ bot.use((ctx, next) => {
 // Bot commands
 bot.command('start', async (ctx) => {
   try {
+    console.log('Processing /start command from:', ctx.from.id);
     await ctx.reply(
       '🌟 Добро пожаловать в ESENTION - премиальный магазин одежды!\n\n' +
       '🛍️ У нас вы найдете:\n' +
@@ -98,6 +105,7 @@ bot.command('start', async (ctx) => {
         }
       }
     );
+    console.log('Successfully sent start message');
   } catch (error) {
     console.error('Error in start command:', error);
     await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
@@ -108,7 +116,8 @@ bot.command('start', async (ctx) => {
 bot.action(/^category_(.+)$/, async (ctx) => {
   try {
     const category = ctx.match[1];
-    await ctx.answerCbQuery(); // Acknowledge the button press
+    console.log('Category selected:', category);
+    await ctx.answerCbQuery();
     await ctx.reply(`Вы выбрали категорию: ${category}\nСкоро здесь появится каталог товаров!`);
   } catch (error) {
     console.error('Error in category selection:', error);
@@ -118,7 +127,8 @@ bot.action(/^category_(.+)$/, async (ctx) => {
 bot.action(/^gender_(.+)$/, async (ctx) => {
   try {
     const gender = ctx.match[1];
-    await ctx.answerCbQuery(); // Acknowledge the button press
+    console.log('Gender selected:', gender);
+    await ctx.answerCbQuery();
     await ctx.reply(`Вы выбрали ${gender === 'men' ? 'мужскую' : 'женскую'} коллекцию\nСкоро здесь появится каталог товаров!`);
   } catch (error) {
     console.error('Error in gender selection:', error);
@@ -135,19 +145,28 @@ const PORT = process.env.PORT || 3000;
 
 // Production mode with webhook
 if (process.env.NODE_ENV === 'production') {
+  console.log('Starting bot in production mode');
   // Set webhook in production
   app.use(bot.webhookCallback('/webhook'));
   
   // Ensure webhook is set correctly
   bot.telegram.deleteWebhook()
-    .then(() => bot.telegram.setWebhook(`${process.env.APP_URL}/webhook`))
     .then(() => {
-      console.log('Webhook set:', `${process.env.APP_URL}/webhook`);
+      console.log('Old webhook deleted');
+      return bot.telegram.setWebhook(`${process.env.APP_URL}/webhook`);
+    })
+    .then(() => {
+      console.log('New webhook set:', `${process.env.APP_URL}/webhook`);
+      return bot.telegram.getWebhookInfo();
+    })
+    .then((info) => {
+      console.log('Webhook info:', info);
     })
     .catch((error) => {
       console.error('Webhook setup error:', error);
     });
 } else {
+  console.log('Starting bot in development mode');
   // Use polling in development
   bot.launch()
     .then(() => {
@@ -160,6 +179,4 @@ if (process.env.NODE_ENV === 'production') {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('App URL:', process.env.APP_URL);
 }); 
