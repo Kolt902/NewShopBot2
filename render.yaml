@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: esention-shop-bot
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: BOT_TOKEN
+        value: 8167818831:AAEIS41PNZ7eE0y2X6mV68HT3UmQ4JTwB6k
+      - key: NODE_ENV
+        value: production 

@@ -4,165 +4,138 @@ const { Telegraf } = require('telegraf');
 const path = require('path');
 const cors = require('cors');
 
-// Конфигурация
+// Configuration
 const config = {
-  BOT_TOKEN: '6187617831:AAEI54IPnZ7e6yX2vmN6bHT3nQ4JThB6k',
-  PORT: 3860
+  BOT_TOKEN: process.env.BOT_TOKEN,
+  PORT: process.env.PORT || 3000,
+  APP_URL: process.env.APP_URL || 'https://web-production-5e072.up.railway.app'
 };
 
-const WEB_APP_URL = 'https://web-production-c2856.up.railway.app';
+// Validation
+if (!config.BOT_TOKEN) {
+  console.error('BOT_TOKEN is required');
+  process.exit(1);
+}
 
-// Инициализация
+// Initialize Express and Bot
 const app = express();
 const bot = new Telegraf(config.BOT_TOKEN);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Логирование запросов
+// Logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+  console.log(`${new Date().toISOString()} [${req.method}] ${req.path}`);
   next();
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
+  res.json({ 
+    status: 'ok', 
     timestamp: new Date().toISOString(),
-    bot_info: {
-      webhook_url: config.WEBHOOK_URL,
-      web_app_url: WEB_APP_URL,
-      port: config.PORT
-    }
+    bot: bot.isRunning ? 'running' : 'stopped',
+    url: config.APP_URL
   });
 });
 
-// Команда /start
-bot.command('start', async (ctx) => {
-  try {
-    const welcomeMessage = `
-🎉 *Добро пожаловать в ESENTION!*
-
-Мы рады представить вам нашу коллекцию одежды:
-
-*👔 Old Money*
-Элегантность и утонченность в каждой детали
-
-*🧢 Streetwear*
-Современный уличный стиль для ярких личностей
-
-*💎 Luxury*
-Премиальные бренды для особых случаев
-
-*🏃‍♂️ Sport*
-Комфортная спортивная одежда
-
-*🎁 АКЦИЯ:*
-Скидка 10% на первую покупку!
-`;
-
-    await ctx.replyWithMarkdown(welcomeMessage, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ 
-            text: '🛍 Открыть магазин', 
-            web_app: { url: WEB_APP_URL } 
-          }]
-        ]
-      }
-    });
-  } catch (error) {
-    console.error('Ошибка:', error);
-    await ctx.reply('Извините, произошла ошибка. Попробуйте позже.');
-  }
-});
-
-// Обработка данных от Web App
-bot.on('message', async (ctx) => {
-  try {
-    const webAppData = ctx.message?.web_app_data?.data;
-    if (!webAppData) return;
-
-    const data = JSON.parse(webAppData);
-    if (data.type === 'checkout') {
-      const items = data.items.map(item => 
-        `• ${item.name} (${item.selectedSize}) - ${item.price}`
-      ).join('\n');
-
-      await ctx.reply(
-        `🛍 Ваш заказ:\n\n${items}\n\nСпасибо за покупку! Мы свяжемся с вами для подтверждения заказа.`,
-        { parse_mode: 'HTML' }
-      );
-
-      // Отправка уведомления администратору
-      if (config.ADMIN_CHAT_ID) {
-        await bot.telegram.sendMessage(
-          config.ADMIN_CHAT_ID,
-          `🛍 Новый заказ!\n\nПользователь: ${ctx.from.first_name} ${ctx.from.last_name || ''} (@${ctx.from.username || 'нет username'})\n\n${items}`,
-          { parse_mode: 'HTML' }
-        );
-      }
-    }
-  } catch (error) {
-    console.error('Web App data processing error:', error);
-    await ctx.reply('Извините, произошла ошибка при обработке заказа.');
-  }
-});
-
-// Обработка заказов
-app.post('/order', async (req, res) => {
-  try {
-    const order = req.body;
-    const items = order.items.map(item => 
-      `• ${item.title} (${item.size}) - ${item.price} ₽`
-    ).join('\n');
-
-    await bot.telegram.sendMessage(config.ADMIN_CHAT_ID, 
-      `🛍 Новый заказ!\n\n${items}\n\n💰 Итого: ${order.total} ₽`,
-      { parse_mode: 'HTML' }
-    );
-    res.json({ status: 'success' });
-  } catch (error) {
-    console.error('Order error:', error);
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
-// Webhook endpoint
-app.post('/webhook', (req, res) => {
-  bot.handleUpdate(req.body, res);
-});
-
-// Root endpoint
+// Serve static files
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Обработка ошибок бота
-bot.catch((err, ctx) => {
-  console.error('Ошибка бота:', err);
-  ctx.reply('Произошла ошибка при обработке команды');
+// Bot commands
+bot.command('start', async (ctx) => {
+  try {
+    const webAppUrl = config.APP_URL.replace(/\/$/, ''); // Удаляем trailing slash если есть
+    
+    await ctx.reply('🌟 Добро пожаловать в ESENTION - премиальный магазин одежды!', {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🎭 Old Money', web_app: { url: `${webAppUrl}?category=oldmoney` } },
+            { text: '🌆 Streetwear', web_app: { url: `${webAppUrl}?category=streetwear` } }
+          ],
+          [
+            { text: '✨ Luxury', web_app: { url: `${webAppUrl}?category=luxury` } },
+            { text: '🏃‍♂️ Sport', web_app: { url: `${webAppUrl}?category=sport` } }
+          ],
+          [
+            { text: '👔 Мужская коллекция', web_app: { url: `${webAppUrl}?gender=men` } },
+            { text: '👗 Женская коллекция', web_app: { url: `${webAppUrl}?gender=women` } }
+          ],
+          [{
+            text: '🛍 Открыть каталог',
+            web_app: { url: webAppUrl }
+          }]
+        ]
+      }
+    });
+    console.log(`Start command handled for user ${ctx.from.id}, using URL: ${webAppUrl}`);
+  } catch (error) {
+    console.error('Error in /start command:', error);
+    await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
+  }
 });
 
-// Запускаем бота
-bot.launch()
-  .then(() => {
-    console.log('Бот успешно запущен');
-    
-    // Запускаем веб-сервер
-    app.listen(config.PORT, '0.0.0.0', () => {
-      console.log(`Веб-сервер запущен на порту ${config.PORT}`);
-      console.log(`Web App URL: ${WEB_APP_URL}`);
-    });
-  })
-  .catch((error) => {
-    console.error('Ошибка при запуске бота:', error);
-    process.exit(1);
-  });
+// Handle web app data
+bot.on('message', async (ctx) => {
+  if (ctx.message?.web_app_data?.data) {
+    try {
+      const data = JSON.parse(ctx.message.web_app_data.data);
+      await ctx.reply(`✨ Спасибо за заказ!\n\n🛍 Сумма: ${data.totalAmount} ₽\n\nМы свяжемся с вами в ближайшее время.`);
+      console.log(`Order received from user ${ctx.from.id}:`, data);
+    } catch (error) {
+      console.error('Error processing web app data:', error);
+      await ctx.reply('Произошла ошибка при оформлении заказа. Попробуйте позже.');
+    }
+  }
+});
 
-// Graceful shutdown
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// Error handling
+bot.catch((err, ctx) => {
+  console.error('Bot error:', err);
+  ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
+});
+
+// Start server and bot
+const startServer = async () => {
+  try {
+    // Start Express server
+    const server = app.listen(config.PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${config.PORT}`);
+      console.log(`Web app URL: ${config.APP_URL}`);
+    });
+
+    // Handle server errors
+    server.on('error', (error) => {
+      console.error('Server error:', error);
+      process.exit(1);
+    });
+
+    // Start bot
+    await bot.launch();
+    console.log('Bot started successfully');
+
+    // Graceful shutdown
+    const shutdown = () => {
+      server.close(() => {
+        console.log('Server stopped');
+        bot.stop('SIGTERM');
+        process.exit(0);
+      });
+    };
+
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
