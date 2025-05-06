@@ -1,9 +1,9 @@
 services:
-  - type: worker
+  - type: web
     name: esention-bot
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node index.js
     envVars:
       - key: BOT_TOKEN
         sync: false 
