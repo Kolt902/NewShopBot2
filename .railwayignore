@@ -1,8 +1,0 @@
-.git
-.gitignore
-.env
-node_modules
-*.log
-.npmrc
-railway.toml
-nixpacks.toml 
